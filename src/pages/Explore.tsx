@@ -5,7 +5,7 @@ import { useData } from '@/contexts/DataContext';
 import { Plant } from '@/types';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, IndianRupee } from 'lucide-react';
 
 const Explore = () => {
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ const Explore = () => {
       
       {filteredPlants.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-muted-foreground">No plants found. Try a different search.</p>
+          <p className="text-muted-foreground">No plants available. Check back soon or add your own plants!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -70,7 +70,10 @@ const PlantCard: React.FC<PlantCardProps> = ({ plant, onClick }) => {
         <p className="text-sm text-muted-foreground line-clamp-2">{plant.description}</p>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <p className="font-semibold text-leaf-600">${plant.price}</p>
+        <div className="flex items-center">
+          <IndianRupee size={16} className="mr-1" />
+          <span className="font-semibold">{plant.price}</span>
+        </div>
         <p className="text-xs text-muted-foreground">{plant.location.address}</p>
       </CardFooter>
     </Card>

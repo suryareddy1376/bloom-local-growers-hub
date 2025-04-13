@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PaymentMethod } from '@/types';
 import { toast } from '@/components/ui/sonner';
+import { IndianRupee } from 'lucide-react';
 
 const Sell = () => {
   const navigate = useNavigate();
@@ -103,17 +104,21 @@ const Sell = () => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="price">Price ($)</Label>
-          <Input
-            id="price"
-            type="number"
-            placeholder="25"
-            min="0.01"
-            step="0.01"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            required
-          />
+          <Label htmlFor="price">Price (₹)</Label>
+          <div className="relative">
+            <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+            <Input
+              id="price"
+              type="number"
+              placeholder="500"
+              min="1"
+              step="1"
+              className="pl-10"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              required
+            />
+          </div>
         </div>
         
         <div className="space-y-2">

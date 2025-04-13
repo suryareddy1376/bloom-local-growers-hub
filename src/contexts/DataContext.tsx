@@ -9,7 +9,7 @@ interface DataContextType {
   plants: Plant[];
   communities: Community[];
   userOrders: Order[];
-  addPlant: (plantData: Omit<Plant, 'id' | 'userId' | 'sellerName' | 'sellerPhotoURL' | 'createdAt' | 'location'>) => void;
+  addPlant: (plantData: Omit<Plant, 'id' | 'userId' | 'sellerName' | 'sellerPhotoURL' | 'createdAt' | 'location' | 'currency'>) => void;
   createCommunity: (communityData: Omit<Community, 'id' | 'creatorId' | 'members' | 'createdAt' | 'location'>) => void;
   joinCommunity: (communityId: string) => void;
   leaveCommunity: (communityId: string) => void;
@@ -48,7 +48,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, user?.location]);
 
   // Add a new plant listing
-  const addPlant = (plantData: Omit<Plant, 'id' | 'userId' | 'sellerName' | 'sellerPhotoURL' | 'createdAt' | 'location'>) => {
+  const addPlant = (plantData: Omit<Plant, 'id' | 'userId' | 'sellerName' | 'sellerPhotoURL' | 'createdAt' | 'location' | 'currency'>) => {
     if (!user || !user.location) {
       toast.error("Unable to add plant. Make sure location services are enabled.");
       return;
@@ -61,6 +61,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sellerPhotoURL: user.photoURL,
       location: user.location,
       createdAt: new Date().toISOString(),
+      currency: '₹', // Set default currency to Indian Rupee
       ...plantData,
     };
 
@@ -135,6 +136,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sellerName: plant.sellerName,
       sellerId: plant.userId,
       price: plant.price,
+      currency: plant.currency,
       paymentMethod,
       status: 'pending',
       address,

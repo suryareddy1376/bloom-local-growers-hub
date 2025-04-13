@@ -7,6 +7,7 @@ export interface Plant {
   title: string;
   description: string;
   price: number;
+  currency: string;
   image: string;
   growthConditions: string;
   paymentMethods: PaymentMethod[];
@@ -29,6 +30,7 @@ export interface Order {
   sellerName: string;
   sellerId: string;
   price: number;
+  currency: string;
   paymentMethod: PaymentMethod;
   status: 'pending' | 'completed' | 'cancelled';
   address?: string;

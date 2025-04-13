@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PaymentMethod } from '@/types';
 import { toast } from '@/components/ui/sonner';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, IndianRupee } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -90,7 +90,10 @@ const PlantDetail = () => {
             <p className="text-xs text-muted-foreground">{plant.location.address}</p>
           </div>
         </div>
-        <p className="text-2xl font-bold text-leaf-600">${plant.price}</p>
+        <div className="flex items-center text-2xl font-bold text-leaf-600">
+          <IndianRupee size={20} />
+          <span>{plant.price}</span>
+        </div>
       </div>
       
       <div className="space-y-4">
