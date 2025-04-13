@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,34 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors for our plant app
+				leaf: {
+					50: '#f0f9f0',
+					100: '#dcf0dc',
+					200: '#bae3bd',
+					300: '#8ece93',
+					400: '#5db366',
+					500: '#3e9747',
+					600: '#2e7a35',
+					700: '#276231',
+					800: '#224d2b',
+					900: '#1e4126',
+					950: '#0e2716',
+				},
+				soil: {
+					50: '#f9f7f4',
+					100: '#f0ece4',
+					200: '#e1d6c7',
+					300: '#d0ba9f',
+					400: '#bd9b78',
+					500: '#b08861',
+					600: '#9c7354',
+					700: '#815e48',
+					800: '#6b4d3f',
+					900: '#5a4135',
+					950: '#302219',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
