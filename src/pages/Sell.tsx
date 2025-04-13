@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,21 +10,24 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PaymentMethod } from '@/types';
 import { toast } from '@/components/ui/sonner';
-import { IndianRupee } from 'lucide-react';
+import { IndianRupee, Upload, Image, X } from 'lucide-react';
 
 const Sell = () => {
   const navigate = useNavigate();
   const { addPlant } = useData();
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [growthConditions, setGrowthConditions] = useState('');
   const [image, setImage] = useState('');
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(['Pickup']);
   
-  // Mock images to choose from
+  // Mock images as fallback options
   const mockImages = [
     'https://images.unsplash.com/photo-1599751449628-8a7270d7e80a?w=800&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=800&auto=format&fit=crop',
@@ -42,7 +45,48 @@ const Sell = () => {
     }
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+    
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+    
+    setUploadedImage(file);
+    
+    // Create preview URL
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    
+    // Clear the sample image selection
+    setImage('');
+  };
+  
+  // Trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+  
+  // Remove uploaded image
+  const removeUploadedImage = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setUploadedImage(null);
+    setPreviewUrl(null);
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) {
@@ -55,7 +99,7 @@ const Sell = () => {
       return;
     }
     
-    if (!title.trim() || !description.trim() || !growthConditions.trim() || !image || !paymentMethods.length) {
+    if (!title.trim() || !description.trim() || !growthConditions.trim() || (!image && !previewUrl) || !paymentMethods.length) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -66,13 +110,23 @@ const Sell = () => {
       return;
     }
     
+    let finalImageUrl = image;
+    
+    // If we have an uploaded image, we would normally upload it to a server
+    // and get back a URL. For now, we'll use the object URL as a placeholder
+    if (previewUrl && uploadedImage) {
+      // In a real app, this would be where you upload the image to a server or cloud storage
+      // For now, we'll just use the local preview URL
+      finalImageUrl = previewUrl;
+    }
+    
     // Add the new plant
     addPlant({
       title,
       description,
       price: numericPrice,
       growthConditions,
-      image,
+      image: finalImageUrl,
       paymentMethods,
     });
     
@@ -82,6 +136,11 @@ const Sell = () => {
     setDescription('');
     setGrowthConditions('');
     setImage('');
+    setUploadedImage(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
     setPaymentMethods(['Pickup']);
     
     navigate('/explore');
@@ -167,24 +226,71 @@ const Sell = () => {
         
         <div className="space-y-2">
           <Label>Plant Photo</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {mockImages.map((mockImage, index) => (
-              <div 
-                key={index}
-                className={`aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${image === mockImage ? 'border-primary' : 'border-transparent'}`}
-                onClick={() => setImage(mockImage)}
-              >
+          
+          {/* Image upload section */}
+          <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+            {/* Hidden file input */}
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            
+            {/* Preview of uploaded image */}
+            {previewUrl ? (
+              <div className="relative inline-block">
                 <img 
-                  src={mockImage} 
-                  alt={`Plant sample ${index + 1}`} 
-                  className="h-full w-full object-cover"
+                  src={previewUrl} 
+                  alt="Uploaded plant" 
+                  className="h-40 w-auto mx-auto object-cover rounded-md"
                 />
+                <button 
+                  type="button"
+                  onClick={removeUploadedImage}
+                  className="absolute top-1 right-1 bg-black bg-opacity-50 rounded-full p-1 text-white"
+                >
+                  <X size={16} />
+                </button>
               </div>
-            ))}
+            ) : (
+              <button 
+                type="button"
+                onClick={triggerFileInput}
+                className="flex flex-col items-center justify-center w-full h-40 gap-2"
+              >
+                <Upload size={32} className="text-gray-400" />
+                <span className="text-sm text-gray-500">Click to upload your plant photo</span>
+                <span className="text-xs text-gray-400">(Max size: 5MB)</span>
+              </button>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Select one of the sample images above. In a real app, you would upload your own.
-          </p>
+          
+          {/* Sample images section */}
+          {!previewUrl && (
+            <>
+              <p className="text-sm mt-4 mb-2">Or select from sample images:</p>
+              <div className="grid grid-cols-3 gap-2">
+                {mockImages.map((mockImage, index) => (
+                  <div 
+                    key={index}
+                    className={`aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${image === mockImage ? 'border-primary' : 'border-transparent'}`}
+                    onClick={() => {
+                      setImage(mockImage);
+                      removeUploadedImage();
+                    }}
+                  >
+                    <img 
+                      src={mockImage} 
+                      alt={`Plant sample ${index + 1}`} 
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         
         <Button type="submit" className="w-full">
