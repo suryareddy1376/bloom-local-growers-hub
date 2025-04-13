@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
@@ -10,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PaymentMethod } from '@/types';
 import { toast } from '@/components/ui/sonner';
-import { IndianRupee, Upload, Image, X } from 'lucide-react';
+import { IndianRupee, Upload, X } from 'lucide-react';
 
 const Sell = () => {
   const navigate = useNavigate();
@@ -26,15 +25,6 @@ const Sell = () => {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(['Pickup']);
-  
-  // Mock images as fallback options
-  const mockImages = [
-    'https://images.unsplash.com/photo-1599751449628-8a7270d7e80a?w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1596547609652-9cf9771a35a3?w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1604762525953-f7fbcf61d3be?w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1528476513691-07e6f563d97f?w=800&auto=format&fit=crop',
-  ];
   
   // Toggle payment method
   const togglePaymentMethod = (method: PaymentMethod) => {
@@ -266,31 +256,6 @@ const Sell = () => {
               </button>
             )}
           </div>
-          
-          {/* Sample images section */}
-          {!previewUrl && (
-            <>
-              <p className="text-sm mt-4 mb-2">Or select from sample images:</p>
-              <div className="grid grid-cols-3 gap-2">
-                {mockImages.map((mockImage, index) => (
-                  <div 
-                    key={index}
-                    className={`aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${image === mockImage ? 'border-primary' : 'border-transparent'}`}
-                    onClick={() => {
-                      setImage(mockImage);
-                      removeUploadedImage();
-                    }}
-                  >
-                    <img 
-                      src={mockImage} 
-                      alt={`Plant sample ${index + 1}`} 
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
         </div>
         
         <Button type="submit" className="w-full">
