@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Auth = () => {
   const { user, loading, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -24,6 +25,11 @@ const Auth = () => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // Clear error when user changes tabs or inputs
+  useEffect(() => {
+    setAuthError(null);
+  }, [loginEmail, loginPassword, registerEmail, registerPassword, confirmPassword]);
+
   // If user is already logged in, redirect to explore page
   if (!loading && user) {
     return <Navigate to="/explore" replace />;
@@ -32,9 +38,11 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      setAuthError(null);
       await signInWithGoogle();
     } catch (error) {
       console.error("Google sign in error:", error);
+      // Error is handled in the AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -49,9 +57,13 @@ const Auth = () => {
     
     try {
       setIsLoading(true);
+      setAuthError(null);
       await signInWithEmailAndPassword(loginEmail, loginPassword);
-    } catch (error) {
-      console.error("Email login error:", error);
+    } catch (error: any) {
+      if (error.code === 'auth/password-login-disabled' || error.code === 'auth/operation-not-allowed') {
+        setAuthError("Email/password login is not enabled. Please use Google sign-in or contact the administrator.");
+      }
+      // Other errors are handled in the AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -77,9 +89,13 @@ const Auth = () => {
     
     try {
       setIsLoading(true);
+      setAuthError(null);
       await signUpWithEmailAndPassword(registerEmail, registerPassword, registerName);
-    } catch (error) {
-      console.error("Sign up error:", error);
+    } catch (error: any) {
+      if (error.code === 'auth/operation-not-allowed') {
+        setAuthError("Email/password sign-up is not enabled. Please use Google sign-in or contact the administrator.");
+      }
+      // Other errors are handled in the AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -112,6 +128,13 @@ const Auth = () => {
           </CardHeader>
           
           <CardContent>
+            {authError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{authError}</AlertDescription>
+              </Alert>
+            )}
+            
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>

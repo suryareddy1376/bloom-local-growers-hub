@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
   GoogleAuthProvider, 
@@ -99,9 +98,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       toast.success("Successfully signed in!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing in with Google:", error);
-      toast.error("Failed to sign in with Google. Please try again.");
+      
+      // Handle specific Firebase error codes
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error("Sign-in cancelled. You closed the popup.");
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        toast.error("Sign-in process was interrupted. Please try again.");
+      } else if (error.code === 'auth/operation-not-allowed') {
+        toast.error("Google sign-in is not enabled for this app. Please contact the app administrator.");
+      } else {
+        toast.error("Failed to sign in with Google. Please try again.");
+      }
+      
       throw error;
     } finally {
       setLoading(false);
@@ -113,9 +123,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       await firebaseSignInWithEmailAndPassword(auth, email, password);
       toast.success("Successfully signed in!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing in with email:", error);
-      toast.error("Failed to sign in. Please check your credentials and try again.");
+      
+      // Handle specific Firebase error codes
+      if (error.code === 'auth/user-not-found') {
+        toast.error("No account exists with this email. Please sign up first.");
+      } else if (error.code === 'auth/wrong-password') {
+        toast.error("Incorrect password. Please try again.");
+      } else if (error.code === 'auth/too-many-requests') {
+        toast.error("Too many failed login attempts. Please try again later or reset your password.");
+      } else if (error.code === 'auth/invalid-credential') {
+        toast.error("Invalid login credentials. Please check your email and password.");
+      } else if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/password-login-disabled') {
+        toast.error("Email/password login is not enabled for this app. Please use Google sign-in or contact the app administrator.");
+      } else {
+        toast.error("Failed to sign in. Please check your credentials and try again.");
+      }
+      
       throw error;
     } finally {
       setLoading(false);
@@ -126,11 +151,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       await createUserWithEmailAndPassword(auth, email, password);
-      // The user will be set via the auth state listener
       toast.success("Account created successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing up:", error);
-      toast.error("Failed to create account. The email may already be in use.");
+      
+      // Handle specific Firebase error codes
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error("This email is already registered. Please try signing in instead.");
+      } else if (error.code === 'auth/invalid-email') {
+        toast.error("Invalid email format. Please check your email and try again.");
+      } else if (error.code === 'auth/weak-password') {
+        toast.error("Password is too weak. Please use a stronger password.");
+      } else if (error.code === 'auth/operation-not-allowed') {
+        toast.error("Email/password sign-up is not enabled for this app. Please use Google sign-in or contact the app administrator.");
+      } else {
+        toast.error("Failed to create account. Please try again later.");
+      }
+      
       throw error;
     } finally {
       setLoading(false);
