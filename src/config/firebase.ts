@@ -4,12 +4,13 @@ import { getAuth } from "firebase/auth";
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // Replace with your actual Firebase API key
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBnFstb0vA59ZEVVLHuAkuevtYjL1fkLwU",
+  authDomain: "bio-planters.firebaseapp.com",
+  projectId: "bio-planters",
+  storageBucket: "bio-planters.firebasestorage.app",
+  messagingSenderId: "701085761259",
+  appId: "1:701085761259:web:34364b9425d601a943c8ae",
+  measurementId: "G-50BRER9F3L"
 };
 
 // Initialize Firebase
