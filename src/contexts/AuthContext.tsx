@@ -1,7 +1,6 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
-  GoogleAuthProvider, 
-  signInWithPopup, 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword as firebaseSignInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -27,7 +26,6 @@ export interface UserType {
 interface AuthContextType {
   user: UserType | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
   signInWithEmailAndPassword: (email: string, password: string) => Promise<void>;
   signUpWithEmailAndPassword: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => void;
@@ -92,32 +90,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const signInWithGoogle = async (): Promise<void> => {
-    try {
-      setLoading(true);
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast.success("Successfully signed in!");
-    } catch (error: any) {
-      console.error("Error signing in with Google:", error);
-      
-      // Handle specific Firebase error codes
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error("Sign-in cancelled. You closed the popup.");
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        toast.error("Sign-in process was interrupted. Please try again.");
-      } else if (error.code === 'auth/operation-not-allowed') {
-        toast.error("Google sign-in is not enabled for this app. Please contact the app administrator.");
-      } else {
-        toast.error("Failed to sign in with Google. Please try again.");
-      }
-      
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signInWithEmailAndPassword = async (email: string, password: string): Promise<void> => {
     try {
       setLoading(true);
@@ -136,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (error.code === 'auth/invalid-credential') {
         toast.error("Invalid login credentials. Please check your email and password.");
       } else if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/password-login-disabled') {
-        toast.error("Email/password login is not enabled for this app. Please use Google sign-in or contact the app administrator.");
+        toast.error("Email/password login is not enabled for this app. Please contact the app administrator.");
       } else {
         toast.error("Failed to sign in. Please check your credentials and try again.");
       }
@@ -163,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (error.code === 'auth/weak-password') {
         toast.error("Password is too weak. Please use a stronger password.");
       } else if (error.code === 'auth/operation-not-allowed') {
-        toast.error("Email/password sign-up is not enabled for this app. Please use Google sign-in or contact the app administrator.");
+        toast.error("Email/password sign-up is not enabled for this app. Please contact the app administrator.");
       } else {
         toast.error("Failed to create account. Please try again later.");
       }
@@ -219,7 +191,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{ 
       user, 
       loading, 
-      signInWithGoogle, 
       signInWithEmailAndPassword, 
       signUpWithEmailAndPassword, 
       signOut, 
@@ -229,3 +200,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
