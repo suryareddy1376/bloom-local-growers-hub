@@ -56,13 +56,22 @@ interface PlantCardProps {
 }
 
 const PlantCard: React.FC<PlantCardProps> = ({ plant, onClick }) => {
+  // Use a default plant image if the plant image is not valid or not available
+  const [imageError, setImageError] = useState(false);
+  const defaultImage = "https://images.unsplash.com/photo-1585090190508-ea73efcdcb69?auto=format&fit=crop&q=80&w=400&h=400";
+  
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <Card className="plant-card overflow-hidden cursor-pointer" onClick={onClick}>
       <div className="aspect-square w-full overflow-hidden">
         <img 
-          src={plant.image} 
+          src={imageError ? defaultImage : plant.image} 
           alt={plant.title} 
           className="h-full w-full object-cover transition-transform duration-300"
+          onError={handleImageError}
         />
       </div>
       <CardContent className="p-4">

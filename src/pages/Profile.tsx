@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
@@ -14,6 +14,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { plants, userOrders } = useData();
+  const defaultImage = "https://images.unsplash.com/photo-1585090190508-ea73efcdcb69?auto=format&fit=crop&q=80&w=400&h=400";
   
   // Filter for plants the user is selling
   const userPlants = plants.filter(plant => plant.userId === user?.id);
@@ -26,6 +27,88 @@ const Profile = () => {
       </div>
     );
   }
+
+  const OrderItem = ({ order }) => {
+    const [imageError, setImageError] = useState(false);
+    
+    return (
+      <Card key={order.id}>
+        <div className="flex">
+          <div className="w-1/3 aspect-square">
+            <img 
+              src={imageError ? defaultImage : order.plantImage} 
+              alt={order.plantTitle} 
+              className="h-full w-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          </div>
+          
+          <CardContent className="flex-1 p-4">
+            <h3 className="font-medium">{order.plantTitle}</h3>
+            <p className="text-sm text-muted-foreground">Seller: {order.sellerName}</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <Badge variant="outline">${order.price}</Badge>
+              <Badge 
+                variant={order.status === 'completed' ? 'secondary' : 'default'}
+              >
+                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+              </Badge>
+              <Badge variant="outline">
+                {order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Pickup'}
+              </Badge>
+            </div>
+            
+            {order.paymentMethod === 'COD' && order.address && (
+              <p className="text-xs mt-2">
+                <span className="font-medium">Delivery Address:</span> {order.address}
+              </p>
+            )}
+            
+            <p className="text-xs text-muted-foreground mt-2">
+              Ordered on {new Date(order.createdAt).toLocaleDateString()}
+            </p>
+          </CardContent>
+        </div>
+      </Card>
+    );
+  };
+
+  const PlantItem = ({ plant }) => {
+    const [imageError, setImageError] = useState(false);
+    
+    return (
+      <Card key={plant.id} className="overflow-hidden">
+        <div className="flex">
+          <div className="w-1/3 aspect-square">
+            <img 
+              src={imageError ? defaultImage : plant.image} 
+              alt={plant.title} 
+              className="h-full w-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          </div>
+          
+          <CardContent className="flex-1 p-4">
+            <h3 className="font-medium">{plant.title}</h3>
+            <p className="text-sm font-bold text-leaf-600">${plant.price}</p>
+            <p className="text-sm line-clamp-2 mt-1">{plant.description}</p>
+            
+            <div className="flex flex-wrap gap-1 mt-2">
+              {plant.paymentMethods.map((method) => (
+                <Badge key={method} variant="outline">
+                  {method === 'COD' ? 'Cash on Delivery' : 'Pickup'}
+                </Badge>
+              ))}
+            </div>
+            
+            <p className="text-xs text-muted-foreground mt-2">
+              Listed on {new Date(plant.createdAt).toLocaleDateString()}
+            </p>
+          </CardContent>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="py-6 space-y-6">
@@ -77,43 +160,7 @@ const Profile = () => {
           ) : (
             <div className="space-y-3">
               {userOrders.map((order) => (
-                <Card key={order.id}>
-                  <div className="flex">
-                    <div className="w-1/3 aspect-square">
-                      <img 
-                        src={order.plantImage} 
-                        alt={order.plantTitle} 
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    
-                    <CardContent className="flex-1 p-4">
-                      <h3 className="font-medium">{order.plantTitle}</h3>
-                      <p className="text-sm text-muted-foreground">Seller: {order.sellerName}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <Badge variant="outline">${order.price}</Badge>
-                        <Badge 
-                          variant={order.status === 'completed' ? 'secondary' : 'default'}
-                        >
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </Badge>
-                        <Badge variant="outline">
-                          {order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Pickup'}
-                        </Badge>
-                      </div>
-                      
-                      {order.paymentMethod === 'COD' && order.address && (
-                        <p className="text-xs mt-2">
-                          <span className="font-medium">Delivery Address:</span> {order.address}
-                        </p>
-                      )}
-                      
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Ordered on {new Date(order.createdAt).toLocaleDateString()}
-                      </p>
-                    </CardContent>
-                  </div>
-                </Card>
+                <OrderItem key={order.id} order={order} />
               ))}
             </div>
           )}
@@ -136,35 +183,7 @@ const Profile = () => {
           ) : (
             <div className="space-y-3">
               {userPlants.map((plant) => (
-                <Card key={plant.id} className="overflow-hidden">
-                  <div className="flex">
-                    <div className="w-1/3 aspect-square">
-                      <img 
-                        src={plant.image} 
-                        alt={plant.title} 
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    
-                    <CardContent className="flex-1 p-4">
-                      <h3 className="font-medium">{plant.title}</h3>
-                      <p className="text-sm font-bold text-leaf-600">${plant.price}</p>
-                      <p className="text-sm line-clamp-2 mt-1">{plant.description}</p>
-                      
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {plant.paymentMethods.map((method) => (
-                          <Badge key={method} variant="outline">
-                            {method === 'COD' ? 'Cash on Delivery' : 'Pickup'}
-                          </Badge>
-                        ))}
-                      </div>
-                      
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Listed on {new Date(plant.createdAt).toLocaleDateString()}
-                      </p>
-                    </CardContent>
-                  </div>
-                </Card>
+                <PlantItem key={plant.id} plant={plant} />
               ))}
             </div>
           )}

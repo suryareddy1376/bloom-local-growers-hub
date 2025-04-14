@@ -22,6 +22,9 @@ const PlantDetail = () => {
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Pickup');
   const [address, setAddress] = useState('');
+  const [imageError, setImageError] = useState(false);
+  
+  const defaultImage = "https://images.unsplash.com/photo-1585090190508-ea73efcdcb69?auto=format&fit=crop&q=80&w=400&h=400";
   
   const plant = plants.find(p => p.id === id);
   
@@ -62,6 +65,10 @@ const PlantDetail = () => {
     navigate('/profile');
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <div className="py-6 space-y-6">
       <div className="flex items-center gap-2">
@@ -73,9 +80,10 @@ const PlantDetail = () => {
       
       <div className="aspect-square w-full overflow-hidden rounded-lg">
         <img 
-          src={plant.image} 
+          src={imageError ? defaultImage : plant.image} 
           alt={plant.title} 
           className="h-full w-full object-cover"
+          onError={handleImageError}
         />
       </div>
       

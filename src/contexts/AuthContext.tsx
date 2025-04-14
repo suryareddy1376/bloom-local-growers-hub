@@ -1,5 +1,15 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword as firebaseSignInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '@/config/firebase';
 import { toast } from '@/components/ui/sonner';
 
 // Mock data for the current user
@@ -19,6 +29,8 @@ interface AuthContextType {
   user: UserType | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmailAndPassword: (email: string, password: string) => Promise<void>;
+  signUpWithEmailAndPassword: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => void;
   updateUserLocation: (location: UserType['location']) => void;
 }
@@ -38,50 +50,101 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is stored in localStorage on mount
-    const storedUser = localStorage.getItem('bloomUser');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Error parsing stored user:", error);
+    // Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setLoading(true);
+      if (firebaseUser) {
+        // Convert Firebase user to app user
+        const appUser: UserType = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`,
+          location: null,
+        };
+        
+        // Check if we have location in localStorage
+        const storedUser = localStorage.getItem('bloomUser');
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            if (parsedUser.location) {
+              appUser.location = parsedUser.location;
+            }
+          } catch (error) {
+            console.error("Error parsing stored user:", error);
+          }
+        }
+        
+        setUser(appUser);
+        localStorage.setItem('bloomUser', JSON.stringify(appUser));
+        
+        // If no location, request it
+        if (!appUser.location) {
+          requestUserLocation(appUser.id);
+        }
+      } else {
+        setUser(null);
         localStorage.removeItem('bloomUser');
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const signInWithGoogle = async (): Promise<void> => {
     try {
-      // In a real app, this would connect to Google Auth
-      // For our demo, we'll create a mock user
-      const mockUser: UserType = {
-        id: 'user_' + Math.random().toString(36).substring(2, 9),
-        email: 'user@example.com',
-        name: 'Demo User',
-        photoURL: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + Math.random(),
-        location: null,
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('bloomUser', JSON.stringify(mockUser));
-      
-      // Request location once signed in
-      await requestUserLocation(mockUser.id);
-      
+      setLoading(true);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
       toast.success("Successfully signed in!");
-      return Promise.resolve();
     } catch (error) {
-      console.error("Error signing in:", error);
-      toast.error("Failed to sign in. Please try again.");
-      return Promise.reject(error);
+      console.error("Error signing in with Google:", error);
+      toast.error("Failed to sign in with Google. Please try again.");
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const signOut = () => {
-    setUser(null);
-    localStorage.removeItem('bloomUser');
-    toast.info("Signed out successfully");
+  const signInWithEmailAndPassword = async (email: string, password: string): Promise<void> => {
+    try {
+      setLoading(true);
+      await firebaseSignInWithEmailAndPassword(auth, email, password);
+      toast.success("Successfully signed in!");
+    } catch (error) {
+      console.error("Error signing in with email:", error);
+      toast.error("Failed to sign in. Please check your credentials and try again.");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUpWithEmailAndPassword = async (email: string, password: string, name: string): Promise<void> => {
+    try {
+      setLoading(true);
+      await createUserWithEmailAndPassword(auth, email, password);
+      // The user will be set via the auth state listener
+      toast.success("Account created successfully!");
+    } catch (error) {
+      console.error("Error signing up:", error);
+      toast.error("Failed to create account. The email may already be in use.");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      toast.info("Signed out successfully");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+    }
   };
 
   const requestUserLocation = async (userId: string): Promise<void> => {
@@ -116,7 +179,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, updateUserLocation }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      signInWithGoogle, 
+      signInWithEmailAndPassword, 
+      signUpWithEmailAndPassword, 
+      signOut, 
+      updateUserLocation 
+    }}>
       {children}
     </AuthContext.Provider>
   );
