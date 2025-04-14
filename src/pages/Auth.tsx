@@ -111,14 +111,6 @@ const Auth = () => {
           </p>
         </div>
         
-        <div className="relative h-48 w-full overflow-hidden rounded-lg">
-          <img 
-            src="https://images.unsplash.com/photo-1604762524889-3e2fcc339df2?auto=format&fit=crop&w=800"
-            alt="Plants" 
-            className="h-full w-full object-cover"
-          />
-        </div>
-        
         <Card>
           <CardHeader>
             <CardTitle>Welcome to Bloom</CardTitle>
