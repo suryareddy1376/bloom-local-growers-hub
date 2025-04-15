@@ -52,3 +52,15 @@ export interface Community {
   };
   createdAt: string;
 }
+
+export interface UserType {
+  id: string;
+  email: string;
+  name: string;
+  photoURL: string;
+  location: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  } | null;
+}
