@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { Plant, Community, Order, PaymentMethod } from '@/types';
-import { generateMockPlants, generateMockCommunities, generateMockOrders } from '@/data/mockData';
+import { generateMockPlants, generateMockCommunities, generateMockOrders, calculateDistance } from '@/data/mockData';
 import { toast } from '@/components/ui/sonner';
 
 interface DataContextType {

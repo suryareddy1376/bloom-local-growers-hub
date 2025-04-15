@@ -1,7 +1,8 @@
+
 import { Plant, Community, Order } from "@/types";
 
 // Calculate distance between two points using Haversine formula
-const calculateDistance = (
+export const calculateDistance = (
   lat1: number,
   lon1: number,
   lat2: number,
