@@ -160,21 +160,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return new Promise((resolve) => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          async (position) => {
             const { latitude, longitude } = position.coords;
-            updateUserLocation({ latitude, longitude });
+            
+            // Use reverse geocoding to get address (you might want to add a geocoding service later)
+            const location = {
+              latitude,
+              longitude,
+              address: `${latitude.toFixed(2)}, ${longitude.toFixed(2)}` // Simplified address for now
+            };
+            
+            updateUserLocation(location);
+            toast.success("Location updated successfully");
             resolve();
           },
           (error) => {
             console.error("Error getting location:", error);
-            toast.error("Unable to get your location. Some features may be limited.");
+            let errorMessage = "Unable to get your location.";
+            
+            switch(error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = "Please enable location permissions to see nearby items.";
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = "Location information is unavailable.";
+                break;
+              case error.TIMEOUT:
+                errorMessage = "Location request timed out.";
+                break;
+            }
+            
+            toast.error(errorMessage);
             resolve(); // Still resolve to continue with sign-in
           },
-          { timeout: 10000, enableHighAccuracy: true }
+          { 
+            timeout: 10000,
+            enableHighAccuracy: true,
+            maximumAge: 0
+          }
         );
       } else {
-        toast.error("Geolocation is not supported by your browser. Some features may be limited.");
-        resolve(); // Still resolve to continue with sign-in
+        toast.error("Geolocation is not supported by your browser.");
+        resolve();
       }
     });
   };

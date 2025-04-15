@@ -34,13 +34,39 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load data when user or their location changes
   useEffect(() => {
-    if (user) {
+    if (user && user.location) {
       // Generate mock data based on user's location
-      setPlants(generateMockPlants(user.location));
-      setCommunities(generateMockCommunities(user.location));
+      const nearbyPlants = generateMockPlants(user.location);
+      const nearbyCommunities = generateMockCommunities(user.location);
+      
+      // Sort by distance (closest first)
+      const sortByDistance = (a: { location: typeof user.location }, b: { location: typeof user.location }) => {
+        if (!user.location) return 0;
+        const distanceA = calculateDistance(
+          user.location.latitude,
+          user.location.longitude,
+          a.location.latitude,
+          a.location.longitude
+        );
+        const distanceB = calculateDistance(
+          user.location.latitude,
+          user.location.longitude,
+          b.location.latitude,
+          b.location.longitude
+        );
+        return distanceA - distanceB;
+      };
+
+      setPlants(nearbyPlants.sort(sortByDistance));
+      setCommunities(nearbyCommunities.sort(sortByDistance));
       setUserOrders(generateMockOrders(user.id));
+      
+      // Show success message only if we have data
+      if (nearbyPlants.length > 0) {
+        toast.success(`Found ${nearbyPlants.length} plants near you!`);
+      }
     } else {
-      // Clear data when user is not logged in
+      // Clear data when user is not logged in or has no location
       setPlants([]);
       setCommunities([]);
       setUserOrders([]);
