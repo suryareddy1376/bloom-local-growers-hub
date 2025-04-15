@@ -1,16 +1,13 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword as firebaseSignInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from '@/config/firebase';
 import { toast } from '@/components/ui/sonner';
 
-// Mock data for the current user
 export interface UserType {
   id: string;
   email: string;
@@ -47,11 +44,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for auth state changes
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setLoading(true);
       if (firebaseUser) {
-        // Convert Firebase user to app user
         const appUser: UserType = {
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
@@ -60,7 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           location: null,
         };
         
-        // Check if we have location in localStorage
         const storedUser = localStorage.getItem('bloomUser');
         if (storedUser) {
           try {
@@ -76,7 +70,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(appUser);
         localStorage.setItem('bloomUser', JSON.stringify(appUser));
         
-        // If no location, request it
         if (!appUser.location) {
           requestUserLocation(appUser.id);
         }
@@ -98,7 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error("Error signing in with email:", error);
       
-      // Handle specific Firebase error codes
       if (error.code === 'auth/user-not-found') {
         toast.error("No account exists with this email. Please sign up first.");
       } else if (error.code === 'auth/wrong-password') {
@@ -127,7 +119,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error("Error signing up:", error);
       
-      // Handle specific Firebase error codes
       if (error.code === 'auth/email-already-in-use') {
         toast.error("This email is already registered. Please try signing in instead.");
       } else if (error.code === 'auth/invalid-email') {
@@ -158,53 +149,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const requestUserLocation = async (userId: string): Promise<void> => {
     return new Promise((resolve) => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            
-            // Use reverse geocoding to get address (you might want to add a geocoding service later)
-            const location = {
-              latitude,
-              longitude,
-              address: `${latitude.toFixed(2)}, ${longitude.toFixed(2)}` // Simplified address for now
-            };
-            
-            updateUserLocation(location);
-            toast.success("Location updated successfully");
-            resolve();
-          },
-          (error) => {
-            console.error("Error getting location:", error);
-            let errorMessage = "Unable to get your location.";
-            
-            switch(error.code) {
-              case error.PERMISSION_DENIED:
-                errorMessage = "Please enable location permissions to see nearby items.";
-                break;
-              case error.POSITION_UNAVAILABLE:
-                errorMessage = "Location information is unavailable.";
-                break;
-              case error.TIMEOUT:
-                errorMessage = "Location request timed out.";
-                break;
-            }
-            
-            toast.error(errorMessage);
-            resolve(); // Still resolve to continue with sign-in
-          },
-          { 
-            timeout: 10000,
-            enableHighAccuracy: true,
-            maximumAge: 0
-          }
-        );
-      } else {
-        toast.error("Geolocation is not supported by your browser.");
+      if (!navigator.geolocation) {
+        toast.error("Your browser doesn't support geolocation. Some features may be limited.");
         resolve();
+        return;
       }
+
+      const locationOptions: PositionOptions = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      };
+
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          const location = {
+            latitude,
+            longitude,
+            address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+          };
+          
+          updateUserLocation(location);
+          toast.success("Location updated successfully");
+          
+          navigator.geolocation.clearWatch(watchId);
+          resolve();
+        },
+        (error) => {
+          let errorMessage = "Unable to get your location.";
+          
+          switch(error.code) {
+            case GeolocationPositionError.PERMISSION_DENIED:
+              errorMessage = "Please enable location permissions to see nearby items.";
+              break;
+            case GeolocationPositionError.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable. Please try again.";
+              break;
+            case GeolocationPositionError.TIMEOUT:
+              errorMessage = "Location request timed out. Please check your connection.";
+              break;
+          }
+          
+          toast.error(errorMessage);
+          resolve();
+        },
+        locationOptions
+      );
     });
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      requestUserLocation(user.id);
+
+      const intervalId = setInterval(() => {
+        requestUserLocation(user.id);
+      }, 5 * 60 * 1000);
+
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [user?.id]);
 
   const updateUserLocation = (location: UserType['location']) => {
     if (user) {
@@ -227,4 +235,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-

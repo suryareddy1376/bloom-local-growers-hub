@@ -1,4 +1,3 @@
-
 import { Plant, Community, Order } from "@/types";
 
 // Calculate distance between two points using Haversine formula
@@ -20,16 +19,25 @@ export const calculateDistance = (
   return R * c;
 };
 
-// Helper to generate random coordinates near a base location
+// Helper to generate random coordinates near a base location with more realistic distribution
 const nearbyLocation = (baseLat: number, baseLng: number) => {
+  // Using Box-Muller transform for normal distribution
   const radius = 5; // ~5km radius
-  const lat = baseLat + (Math.random() - 0.5) * (radius / 111);
-  const lng = baseLng + (Math.random() - 0.5) * (radius / (111 * Math.cos(baseLat * Math.PI / 180)));
+  const u = Math.random();
+  const v = Math.random();
+  
+  // Box-Muller transform for more realistic clustering
+  const r = Math.sqrt(-2.0 * Math.log(u)) * radius / 111;
+  const theta = 2.0 * Math.PI * v;
+  
+  // Convert to lat/lng offsets
+  const lat = baseLat + r * Math.cos(theta);
+  const lng = baseLng + r * Math.sin(theta) / Math.cos(baseLat * Math.PI / 180);
   
   return {
     latitude: lat,
     longitude: lng,
-    address: `${lat.toFixed(2)}, ${lng.toFixed(2)}` // Simplified address
+    address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` // More precise coordinates
   };
 };
 
