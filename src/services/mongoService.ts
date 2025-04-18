@@ -1,30 +1,28 @@
 
 import { Plant, Community, Order, UserType } from '@/types';
 
-// MongoDB Atlas connection string - using ENV var would be better for production
-const MONGODB_URI = "YOUR_MONGODB_CONNECTION_STRING";
-const DB_NAME = "bio_planters";
+// API base URL - this should point to your deployed backend
+const API_BASE_URL = "https://your-backend-api.com/api";
 
-// Collections
-enum Collections {
-  PLANTS = "plants",
-  COMMUNITIES = "communities",
-  ORDERS = "orders",
-  USERS = "users"
-}
-
-// This service uses a simplified approach for demo purposes
-// In production, you should use a backend API to connect to MongoDB
 export const mongoService = {
   // Plants
   async getPlants(userLocation: { latitude: number; longitude: number } | null): Promise<Plant[]> {
     try {
-      // In a real implementation, this would make an API call to your backend
-      // which would then query MongoDB
-      console.log('Fetching plants from MongoDB with user location:', userLocation);
+      // Call backend API instead of MongoDB directly
+      const response = await fetch(`${API_BASE_URL}/plants`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userLocation }),
+      });
       
-      // For demo, return empty array - this should be replaced with actual API call
-      return [];
+      if (!response.ok) {
+        throw new Error(`Error fetching plants: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.plants;
     } catch (error) {
       console.error('Error fetching plants:', error);
       return [];
@@ -33,22 +31,25 @@ export const mongoService = {
 
   async addPlant(plantData: Omit<Plant, 'id' | 'userId' | 'sellerName' | 'sellerPhotoURL' | 'createdAt' | 'location' | 'currency'>, user: UserType): Promise<Plant | null> {
     try {
-      // In a real implementation, this would make an API call to your backend
-      console.log('Adding plant to MongoDB:', plantData);
+      // Call backend API with plant data and user info
+      const response = await fetch(`${API_BASE_URL}/plants`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAuthToken()}`, // You'll need to implement this function
+        },
+        body: JSON.stringify({
+          plantData,
+          user,
+        }),
+      });
       
-      // For demo, return mocked response - replace with actual API call
-      const newPlant: Plant = {
-        id: 'plant_' + Math.random().toString(36).substring(2, 9),
-        userId: user.id,
-        sellerName: user.name,
-        sellerPhotoURL: user.photoURL,
-        location: user.location || { latitude: 0, longitude: 0 },
-        createdAt: new Date().toISOString(),
-        currency: '₹',
-        ...plantData,
-      };
+      if (!response.ok) {
+        throw new Error(`Error adding plant: ${response.status}`);
+      }
       
-      return newPlant;
+      const data = await response.json();
+      return data.plant;
     } catch (error) {
       console.error('Error adding plant:', error);
       return null;
@@ -58,10 +59,20 @@ export const mongoService = {
   // Communities
   async getCommunities(userLocation: { latitude: number; longitude: number } | null): Promise<Community[]> {
     try {
-      console.log('Fetching communities from MongoDB with user location:', userLocation);
+      const response = await fetch(`${API_BASE_URL}/communities`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userLocation }),
+      });
       
-      // For demo, return empty array - replace with actual API call
-      return [];
+      if (!response.ok) {
+        throw new Error(`Error fetching communities: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.communities;
     } catch (error) {
       console.error('Error fetching communities:', error);
       return [];
@@ -70,19 +81,24 @@ export const mongoService = {
 
   async createCommunity(communityData: Omit<Community, 'id' | 'creatorId' | 'members' | 'createdAt' | 'location'>, user: UserType): Promise<Community | null> {
     try {
-      console.log('Creating community in MongoDB:', communityData);
+      const response = await fetch(`${API_BASE_URL}/communities`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAuthToken()}`,
+        },
+        body: JSON.stringify({
+          communityData,
+          user,
+        }),
+      });
       
-      // For demo, return mocked response - replace with actual API call
-      const newCommunity: Community = {
-        id: 'comm_' + Math.random().toString(36).substring(2, 9),
-        creatorId: user.id,
-        members: [user.id],
-        location: user.location || { latitude: 0, longitude: 0 },
-        createdAt: new Date().toISOString(),
-        ...communityData,
-      };
+      if (!response.ok) {
+        throw new Error(`Error creating community: ${response.status}`);
+      }
       
-      return newCommunity;
+      const data = await response.json();
+      return data.community;
     } catch (error) {
       console.error('Error creating community:', error);
       return null;
@@ -91,7 +107,19 @@ export const mongoService = {
 
   async joinCommunity(communityId: string, userId: string): Promise<boolean> {
     try {
-      console.log('Joining community in MongoDB:', communityId, userId);
+      const response = await fetch(`${API_BASE_URL}/communities/${communityId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAuthToken()}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error joining community: ${response.status}`);
+      }
+      
       return true;
     } catch (error) {
       console.error('Error joining community:', error);
@@ -101,7 +129,19 @@ export const mongoService = {
 
   async leaveCommunity(communityId: string, userId: string): Promise<boolean> {
     try {
-      console.log('Leaving community in MongoDB:', communityId, userId);
+      const response = await fetch(`${API_BASE_URL}/communities/${communityId}/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAuthToken()}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error leaving community: ${response.status}`);
+      }
+      
       return true;
     } catch (error) {
       console.error('Error leaving community:', error);
@@ -112,8 +152,20 @@ export const mongoService = {
   // Orders
   async getUserOrders(userId: string): Promise<Order[]> {
     try {
-      console.log('Fetching user orders from MongoDB:', userId);
-      return [];
+      const response = await fetch(`${API_BASE_URL}/orders/user/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAuthToken()}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching user orders: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.orders;
     } catch (error) {
       console.error('Error fetching user orders:', error);
       return [];
@@ -122,18 +174,44 @@ export const mongoService = {
 
   async createOrder(orderData: Omit<Order, 'id' | 'createdAt'>): Promise<Order | null> {
     try {
-      console.log('Creating order in MongoDB:', orderData);
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAuthToken()}`,
+        },
+        body: JSON.stringify({ orderData }),
+      });
       
-      const newOrder: Order = {
-        id: 'order_' + Math.random().toString(36).substring(2, 9),
-        createdAt: new Date().toISOString(),
-        ...orderData,
-      };
+      if (!response.ok) {
+        throw new Error(`Error creating order: ${response.status}`);
+      }
       
-      return newOrder;
+      const data = await response.json();
+      return data.order;
     } catch (error) {
       console.error('Error creating order:', error);
       return null;
     }
+  }
+};
+
+// Helper function to get Firebase auth token
+const getAuthToken = async (): Promise<string> => {
+  try {
+    // Get the current user from Firebase
+    const { auth } = await import('@/config/firebase');
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Get the ID token
+    const token = await user.getIdToken();
+    return token;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    throw error;
   }
 };
