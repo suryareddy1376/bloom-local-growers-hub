@@ -21,4 +21,3 @@ export const getAuthToken = async (): Promise<string> => {
     throw error;
   }
 };
-
