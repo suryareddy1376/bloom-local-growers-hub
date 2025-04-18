@@ -1,8 +1,7 @@
-
 import { Plant, Community, Order, UserType } from '@/types';
 
-// API base URL - this should point to your deployed backend
-const API_BASE_URL = "https://your-backend-api.com/api";
+// Update this to your deployed backend API URL
+const API_BASE_URL = process.env.VITE_API_URL || "http://localhost:3000/api";
 
 export const mongoService = {
   // Plants
